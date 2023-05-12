@@ -36,6 +36,7 @@ class ChatExitReason(Enum):
 ALLOWED_MODELS = ["gpt-3.5-turbo", "gpt-4"]
 WARNING_PREFIX = ":small_red_triangle:"
 INFO_PREFIX = ":small_blue_diamond:"
+BYE_PREFIX = ":wave:"
 USER_DISPLAY_NAME = "[yellow3][b]You[/b][/yellow3] :smiley:"
 BOT_DISPLAY_NAME = "[deep_sky_blue3][bold]Bot[/bold][/deep_sky_blue3] :robot:"
 SYS_CONVERSATION_INITIATION_MESSAGE = Message(
@@ -165,3 +166,4 @@ def run() -> None:
         chat_exit_reason, rollover_message = chat(
             model, has_previous_chat=True, roller_message=rollover_message
         )
+    print(f"{BYE_PREFIX} Bye!")
