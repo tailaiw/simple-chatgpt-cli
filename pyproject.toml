@@ -4,15 +4,15 @@ wrap-summaries = 88
 wrap-descriptions = 88
 
 [tool.poetry.scripts]
-chatgpt = 'chatgpt.main:run'
+chatgpt = 'chatgpt_cli.main:run'
 
 [tool.poetry]
-name = "chatgpt"
+name = "chatgpt-cli"
 version = "0.1.0"
 description = ""
 authors = ["tailaiw <29800495+tailaiw@users.noreply.github.com>"]
 readme = "README.md"
-packages = [{ include = "chatgpt" }]
+packages = [{ include = "chatgpt_cli" }]
 
 [tool.poetry.dependencies]
 python = "3.10.10"
