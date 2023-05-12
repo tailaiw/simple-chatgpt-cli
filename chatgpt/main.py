@@ -1,4 +1,5 @@
 import os
+import signal
 import time
 from dataclasses import dataclass
 from enum import Enum
@@ -6,6 +7,10 @@ from enum import Enum
 import openai
 from rich import print
 from rich.prompt import Confirm, Prompt
+
+# disable CTRL+C
+signal.signal(signal.SIGINT, lambda signum, frame: None)
+
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -154,13 +159,9 @@ def chat(
 
 
 def run() -> None:
-    try:
-        model = select_model()
-        chat_exit_reason, rollover_message = chat(model, has_previous_chat=False)
-        while chat_exit_reason == ChatExitReason.START_OVER:
-            chat_exit_reason, rollover_message = chat(
-                model, has_previous_chat=True, roller_message=rollover_message
-            )
-    except KeyboardInterrupt:
-        print("\n\nBye!")
-        exit(0)
+    model = select_model()
+    chat_exit_reason, rollover_message = chat(model, has_previous_chat=False)
+    while chat_exit_reason == ChatExitReason.START_OVER:
+        chat_exit_reason, rollover_message = chat(
+            model, has_previous_chat=True, roller_message=rollover_message
+        )
