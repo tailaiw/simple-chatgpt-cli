@@ -38,7 +38,7 @@ SYS_CONVERSATION_INITIATION_MESSAGE = Message(
     content="You are a helpful assistant. Answer as concisely as possible.",
     timestamp=int(time.time()),
 )
-CONVERSATION_SOFT_TIMEOUT_SECONDS = 60
+CONVERSATION_SOFT_TIMEOUT_SECONDS = 300
 TEMPERATURE = 0.5
 
 
