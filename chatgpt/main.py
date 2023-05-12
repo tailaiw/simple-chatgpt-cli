@@ -7,7 +7,7 @@ import openai
 from rich import print
 from rich.prompt import Confirm, Prompt
 
-openai.api_key = os.getenv("API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 class Role(Enum):
@@ -153,7 +153,7 @@ def chat(
             return ChatExitReason.START_OVER, None
 
 
-if __name__ == "__main__":
+def run() -> None:
     model = select_model()
     chat_exit_reason, rollover_message = chat(model, has_previous_chat=False)
     while chat_exit_reason == ChatExitReason.START_OVER:

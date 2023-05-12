@@ -3,8 +3,11 @@ recursive = true
 wrap-summaries = 88
 wrap-descriptions = 88
 
+[tool.poetry.scripts]
+chatgpt = 'chatgpt.main:run'
+
 [tool.poetry]
-name = "openai-api-test"
+name = "chatgpt"
 version = "0.1.0"
 description = ""
 authors = ["tailaiw <29800495+tailaiw@users.noreply.github.com>"]
