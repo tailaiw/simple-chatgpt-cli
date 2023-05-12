@@ -119,9 +119,10 @@ def chat(
     # welcome console message
     if not has_previous_chat:
         print(
-            f"{INFO_PREFIX} You can now start chatting with the bot. "
+            f"{INFO_PREFIX} You can now start chatting with the bot. \n"
             f"Type '{ChatExitReason.EXIT.value}' to exit. "
-            f"Type '{ChatExitReason.START_OVER.value}' to start a new conversation (a new conversation will lose all previous context)."
+            f"Type '{ChatExitReason.START_OVER.value}' to start a new conversation (a new conversation will lose all previous context). "
+            f"Type '#multiline' to enter multiline mode."
         )
     else:
         print(
