@@ -10,13 +10,12 @@ pip install simple-chatgpt-cli
 
 ## Usage
 
-You must have an environment variable `OPENAI_API_KEY` for a valid OpenAI API key.
-
+You can run the program with
 ```bash
-export OPENAI_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 chatgpt
 ```
 
+You must either have environment variable `OPENAI_API_KEY` or set the key following the CLI prompts.
 
 ![screenshot](screenshot.png)
 

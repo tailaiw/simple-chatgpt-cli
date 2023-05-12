@@ -11,8 +11,24 @@ from rich.prompt import Confirm, Prompt
 # disable CTRL+C
 signal.signal(signal.SIGINT, lambda signum, frame: None)
 
-
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# OpenAI API key
+key_file_path = os.path.join(os.path.expanduser("~"), ".config/openai_key")
+if os.getenv("OPENAI_API_KEY") is None and not os.path.exists(key_file_path):
+    openai_api_key = Prompt.ask(
+        "OpenAI API key not found. Press Enter it here to continue", password=True
+    )
+    openai.api_key = openai_api_key
+    confirm_save_key = Confirm.ask(
+        f"Do you want to save the key to {key_file_path}?", default=True
+    )
+    if confirm_save_key:
+        with open(key_file_path, "w") as f:
+            f.write(openai_api_key)
+elif os.getenv("OPENAI_API_KEY") is None and os.path.exists(key_file_path):
+    with open(key_file_path, "r") as f:
+        openai.api_key = f.read().strip()
+else:
+    openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 class Role(Enum):
