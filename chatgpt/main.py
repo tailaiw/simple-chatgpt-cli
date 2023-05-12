@@ -154,9 +154,13 @@ def chat(
 
 
 def run() -> None:
-    model = select_model()
-    chat_exit_reason, rollover_message = chat(model, has_previous_chat=False)
-    while chat_exit_reason == ChatExitReason.START_OVER:
-        chat_exit_reason, rollover_message = chat(
-            model, has_previous_chat=True, roller_message=rollover_message
-        )
+    try:
+        model = select_model()
+        chat_exit_reason, rollover_message = chat(model, has_previous_chat=False)
+        while chat_exit_reason == ChatExitReason.START_OVER:
+            chat_exit_reason, rollover_message = chat(
+                model, has_previous_chat=True, roller_message=rollover_message
+            )
+    except KeyboardInterrupt:
+        print("\n\nBye!")
+        exit(0)
