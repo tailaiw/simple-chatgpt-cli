@@ -1,4 +1,6 @@
 import os
+import time
+from dataclasses import dataclass
 from enum import Enum
 
 import openai
@@ -7,24 +9,47 @@ from rich.prompt import Confirm, Prompt
 
 openai.api_key = os.getenv("API_KEY")
 
-ALLOWED_MODELS = ["gpt-3.5-turbo", "gpt-4"]
-USER_DISPLAY_NAME = "[yellow3][b]You[/b][/yellow3] :smiley:"
-BOT_DISPLAY_NAME = "[deep_sky_blue3][bold]Bot[/bold][/deep_sky_blue3] :robot:"
+
+class Role(Enum):
+    SYSTEM = "system"
+    ASSISTANT = "assistant"
+    USER = "user"
 
 
-def select_model() -> str:
-    model = Prompt.ask(
-        "Please select the model you want to use",
-        default="gpt-3.5-turbo",
-        choices=ALLOWED_MODELS,
-    )
-    print(f"You selected [bold cyan]{model}[/bold cyan].")
-    return model
+@dataclass
+class Message:
+    role: Role
+    content: str
+    timestamp: int
 
 
 class ChatExitReason(Enum):
     EXIT = "#exit"
     START_OVER = "#startover"
+
+
+ALLOWED_MODELS = ["gpt-3.5-turbo", "gpt-4"]
+WARNING_PREFIX = ":small_red_triangle:"
+INFO_PREFIX = ":small_blue_diamond:"
+USER_DISPLAY_NAME = "[yellow3][b]You[/b][/yellow3] :smiley:"
+BOT_DISPLAY_NAME = "[deep_sky_blue3][bold]Bot[/bold][/deep_sky_blue3] :robot:"
+SYS_CONVERSATION_INITIATION_MESSAGE = Message(
+    role=Role.SYSTEM,
+    content="You are a helpful assistant. Answer as concisely as possible.",
+    timestamp=int(time.time()),
+)
+CONVERSATION_SOFT_TIMEOUT_SECONDS = 60
+TEMPERATURE = 0.5
+
+
+def select_model() -> str:
+    model = Prompt.ask(
+        f"{INFO_PREFIX} Please select the model you want to use",
+        default="gpt-3.5-turbo",
+        choices=ALLOWED_MODELS,
+    )
+    print(f"{INFO_PREFIX} You selected [bold cyan]{model}[/bold cyan].")
+    return model
 
 
 def request_user_input() -> str:
@@ -34,14 +59,16 @@ def request_user_input() -> str:
         return request_user_input()
 
     if user_input == ChatExitReason.EXIT.value:
-        exit_confirm = Confirm.ask("Do you really want to exit?", default=False)
+        exit_confirm = Confirm.ask(
+            f"{WARNING_PREFIX} Do you really want to exit?", default=False
+        )
         if exit_confirm:
             return ChatExitReason.EXIT.value
         return request_user_input()
 
     if user_input == ChatExitReason.START_OVER.value:
         startover_confirm = Confirm.ask(
-            "A new conversation will lose all previous context. Do you really want to start a new conversation?",
+            f"{WARNING_PREFIX} A new conversation will lose all previous context. Do you really want to start a new conversation?",
             default=False,
         )
         if startover_confirm:
@@ -51,45 +78,85 @@ def request_user_input() -> str:
     return user_input
 
 
-def chat(model: str, has_previous_chat: bool) -> ChatExitReason:
+def chat(
+    model: str, has_previous_chat: bool, roller_message: Message | None = None
+) -> tuple[ChatExitReason, Message | None]:
+    # welcome console message
     if not has_previous_chat:
         print(
-            "You can now start chatting with the bot. "
+            f"{INFO_PREFIX} You can now start chatting with the bot. "
             f"Type '{ChatExitReason.EXIT.value}' to exit. "
             f"Type '{ChatExitReason.START_OVER.value}' to start a new conversation (a new conversation will lose all previous context)."
         )
     else:
-        print("A new conversation started. The bot forgot all previous context.")
-
-    messages = [{"role": "system", "content": "You are a helpful assistant."}]
-    while True:
-        user_input = request_user_input()
-        if user_input == ChatExitReason.EXIT.value:
-            return ChatExitReason.EXIT
-
-        if user_input == ChatExitReason.START_OVER.value:
-            return ChatExitReason.START_OVER
-
-        messages.append({"role": "user", "content": user_input})
-        response = openai.ChatCompletion.create(
-            model=model, temperature=0.5, messages=messages
+        print(
+            f"{INFO_PREFIX} A new conversation started. The bot forgot all previous context."
         )
-        assert response.choices[0]["message"]["role"] == "assistant"
+
+    if roller_message is None:
+        messages = [SYS_CONVERSATION_INITIATION_MESSAGE]
+    else:
+        messages = [SYS_CONVERSATION_INITIATION_MESSAGE, roller_message]
+
+    while True:
+        if messages[-1].role != Role.USER:
+            user_input = request_user_input()
+            if user_input == ChatExitReason.EXIT.value:
+                return ChatExitReason.EXIT, None
+            if user_input == ChatExitReason.START_OVER.value:
+                return ChatExitReason.START_OVER, None
+            user_input_timestamp = int(time.time())
+            if (
+                messages[-1].role != Role.SYSTEM
+                and user_input_timestamp - messages[-1].timestamp
+                > CONVERSATION_SOFT_TIMEOUT_SECONDS
+            ):
+                startover_confirm = Confirm.ask(
+                    f"{WARNING_PREFIX} The previous conversation has been idle for more than {CONVERSATION_SOFT_TIMEOUT_SECONDS} seconds. "
+                    "Do you want to start a new conversation?",
+                    default=True,
+                )
+                if startover_confirm:
+                    return ChatExitReason.START_OVER, Message(
+                        role=Role.USER,
+                        content=user_input,
+                        timestamp=user_input_timestamp,
+                    )
+            messages.append(
+                Message(
+                    role=Role.USER, content=user_input, timestamp=user_input_timestamp
+                )
+            )
+
+        response = openai.ChatCompletion.create(  # type: ignore
+            model=model,
+            temperature=TEMPERATURE,
+            messages=[
+                {"role": message.role.value, "content": message.content}
+                for message in messages
+            ],
+        )
+        assert response.choices[0]["message"]["role"] == Role.ASSISTANT.value
 
         bot_response = response.choices[0]["message"]["content"]
         print(f"{BOT_DISPLAY_NAME}:", bot_response)
+        messages.append(
+            Message(
+                role=Role.ASSISTANT, content=bot_response, timestamp=int(time.time())
+            )
+        )
 
         if response.choices[0]["finish_reason"] == "length":
             Prompt.ask(
-                "The total token count exceeds the maximum. You must start a new conversation. Press Enter to continue"
+                f"{WARNING_PREFIX} The total token count exceeds the maximum. You must start a new conversation. Press Enter to continue",
             )
-            return ChatExitReason.START_OVER
-
-        messages.append({"role": "assistant", "content": bot_response})
+            return ChatExitReason.START_OVER, None
 
 
 if __name__ == "__main__":
     model = select_model()
-    chat_exit_reason = chat(model, has_previous_chat=False)
+    chat_exit_reason, rollover_message = chat(model, has_previous_chat=False)
     while chat_exit_reason == ChatExitReason.START_OVER:
-        chat_exit_reason = chat(model, has_previous_chat=True)
+        chat_exit_reason, rollover_message = chat(
+            model, has_previous_chat=True, roller_message=rollover_message
+        )
