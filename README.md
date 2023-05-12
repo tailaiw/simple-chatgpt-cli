@@ -4,8 +4,6 @@ A simple implementation of ChatGPT in terminal, so I can avoid using the ChatGPT
 
 ## Installation
 
-Assuming you have [Poetry](https://python-poetry.org/) installed, run the following command to install the dependencies:
-
 ```bash
 pip install simple-chatgpt-cli
 ```
