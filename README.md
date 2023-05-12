@@ -15,7 +15,7 @@ You can run the program with
 chatgpt
 ```
 
-You must either have environment variable `OPENAI_API_KEY` or set the key following the CLI prompts.
+You must either set/save the key following the CLI prompts (recommended) or set an environment variable `OPENAI_API_KEY`.
 
 ![screenshot](screenshot.png)
 

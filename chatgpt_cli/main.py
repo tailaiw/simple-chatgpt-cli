@@ -12,16 +12,20 @@ from rich.prompt import Confirm, Prompt
 signal.signal(signal.SIGINT, lambda signum, frame: None)
 
 # OpenAI API key
-key_file_path = os.path.join(os.path.expanduser("~"), ".config/openai_key")
+key_file_path = os.path.join(
+    os.path.expanduser("~"), ".config/simple_chatgpt_cli/openai_api_key"
+)
 if os.getenv("OPENAI_API_KEY") is None and not os.path.exists(key_file_path):
     openai_api_key = Prompt.ask(
         "OpenAI API key not found. Press Enter it here to continue", password=True
     )
     openai.api_key = openai_api_key
     confirm_save_key = Confirm.ask(
-        f"Do you want to save the key to {key_file_path}?", default=True
+        f"Do you want to save the key to {key_file_path} so you don't have to enter it again next time?",
+        default=True,
     )
     if confirm_save_key:
+        os.makedirs(os.path.dirname(key_file_path), exist_ok=True)
         with open(key_file_path, "w") as f:
             f.write(openai_api_key)
 elif os.getenv("OPENAI_API_KEY") is None and os.path.exists(key_file_path):
