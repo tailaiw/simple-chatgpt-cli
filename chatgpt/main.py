@@ -65,7 +65,7 @@ def request_user_input() -> str:
 
     if user_input == ChatExitReason.EXIT.value:
         exit_confirm = Confirm.ask(
-            f"{WARNING_PREFIX} Do you really want to exit?", default=False
+            f"{WARNING_PREFIX} Do you really want to exit?", default=True
         )
         if exit_confirm:
             return ChatExitReason.EXIT.value
@@ -74,7 +74,7 @@ def request_user_input() -> str:
     if user_input == ChatExitReason.START_OVER.value:
         startover_confirm = Confirm.ask(
             f"{WARNING_PREFIX} A new conversation will lose all previous context. Do you really want to start a new conversation?",
-            default=False,
+            default=True,
         )
         if startover_confirm:
             return ChatExitReason.START_OVER.value
