@@ -1,4 +1,4 @@
-# ChatGPT
+# ChatGPT-CLI
 
 A super quick implementation of ChatGPT in terminal, so I can avoid using the ChatGPT website which is more expensive and less privacy-friendly.
 
