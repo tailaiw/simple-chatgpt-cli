@@ -24,6 +24,8 @@ You must either set/save the key following the CLI prompts (recommended) or set 
 
 ## Tips
 
+Use `#multiline` to enter multiline mode. This is useful when you want to enter messages with line breaks.
+
 Use `#startover` to start a new conversation whenever you switch to a new topic and the bot doesn't need previous context anymore. This helps reduce your OpenAI bill.
 
 The program will remind you this if you come back to an idle conversation after more than 5 minutes.

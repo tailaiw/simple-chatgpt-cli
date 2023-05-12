@@ -101,6 +101,15 @@ def request_user_input() -> str:
             return ChatExitReason.START_OVER.value
         return request_user_input()
 
+    if user_input == "#multiline":
+        print("Multiline mode enabled. Press CTRL+D to finish.")
+        try:
+            user_input = ""
+            while True:
+                user_input += input() + "\n"
+        except EOFError:
+            pass
+
     return user_input
 
 
