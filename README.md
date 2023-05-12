@@ -7,8 +7,8 @@ A super quick implementation of ChatGPT in terminal, so I can avoid using the Ch
 Assuming you have [Poetry](https://python-poetry.org/) installed, run the following command to install the dependencies:
 
 ```bash
-git clone git@github.com:tailaiw/chatgpt-cli.git
-cd chatgpt-cli
+git clone git@github.com:tailaiw/chatgpt.git
+cd chatgpt
 poetry install
 ```
 
