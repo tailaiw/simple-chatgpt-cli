@@ -29,6 +29,11 @@ chatgpt() {( set -e
 )}
 ```
 
+You must have an environment variable `OPENAI_API_KEY` for a valid OpenAI API key.
+
+## Tips
+
+Use `#startover` to start a new conversation whenever you switch a new topic and the bot doesn't need to refer the previous context anymore. This helps saving money. The program will remind you that if a conversation is idle for a while.
 
 ## Development
 
