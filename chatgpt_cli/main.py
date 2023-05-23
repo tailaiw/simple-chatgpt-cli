@@ -114,7 +114,7 @@ def request_user_input() -> str:
 
 
 def chat(
-    model: str, has_previous_chat: bool, roller_message: Message | None = None
+    model: str, has_previous_chat: bool, rollover_message: Message | None = None
 ) -> tuple[ChatExitReason, Message | None]:
     # welcome console message
     if not has_previous_chat:
@@ -129,10 +129,10 @@ def chat(
             f"{INFO_PREFIX} A new conversation started. The bot forgot all previous context."
         )
 
-    if roller_message is None:
+    if rollover_message is None:
         messages = [SYS_CONVERSATION_INITIATION_MESSAGE]
     else:
-        messages = [SYS_CONVERSATION_INITIATION_MESSAGE, roller_message]
+        messages = [SYS_CONVERSATION_INITIATION_MESSAGE, rollover_message]
 
     while True:
         if messages[-1].role != Role.USER:
@@ -194,6 +194,6 @@ def run() -> None:
     chat_exit_reason, rollover_message = chat(model, has_previous_chat=False)
     while chat_exit_reason == ChatExitReason.START_OVER:
         chat_exit_reason, rollover_message = chat(
-            model, has_previous_chat=True, roller_message=rollover_message
+            model, has_previous_chat=True, rollover_message=rollover_message
         )
     print(f"{BYE_PREFIX} Bye!")
