@@ -53,7 +53,12 @@ class ChatExitReason(Enum):
     START_OVER = "#startover"
 
 
-ALLOWED_MODELS = ["gpt-3.5-turbo", "gpt-4"]
+class AllowedModels(Enum):
+    GPT_3_5_TURBO = "gpt-3.5-turbo"
+    GPT_4 = "gpt-4"
+
+
+ALLOWED_MODELS = [model.value for model in AllowedModels]
 WARNING_PREFIX = ":small_red_triangle:"
 INFO_PREFIX = ":small_blue_diamond:"
 BYE_PREFIX = ":wave:"
@@ -71,7 +76,7 @@ TEMPERATURE = 0.5
 def select_model() -> str:
     model = Prompt.ask(
         f"{INFO_PREFIX} Please select the model you want to use",
-        default="gpt-4",
+        default=AllowedModels.GPT_4.value,
         choices=ALLOWED_MODELS,
     )
     print(f"{INFO_PREFIX} You selected [bold cyan]{model}[/bold cyan].")
