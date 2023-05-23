@@ -71,7 +71,7 @@ TEMPERATURE = 0.5
 def select_model() -> str:
     model = Prompt.ask(
         f"{INFO_PREFIX} Please select the model you want to use",
-        default="gpt-3.5-turbo",
+        default="gpt-4",
         choices=ALLOWED_MODELS,
     )
     print(f"{INFO_PREFIX} You selected [bold cyan]{model}[/bold cyan].")
