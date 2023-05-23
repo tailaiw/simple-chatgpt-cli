@@ -11,28 +11,29 @@ from rich.prompt import Confirm, Prompt
 # disable CTRL+C
 signal.signal(signal.SIGINT, lambda signum, frame: None)
 
-# OpenAI API key
-key_file_path = os.path.join(
-    os.path.expanduser("~"), ".config/simple_chatgpt_cli/openai_api_key"
-)
-if os.getenv("OPENAI_API_KEY") is None and not os.path.exists(key_file_path):
-    openai_api_key = Prompt.ask(
-        "OpenAI API key not found. Press Enter it here to continue", password=True
+
+def setup_openai_key() -> None:
+    key_file_path = os.path.join(
+        os.path.expanduser("~"), ".config/simple_chatgpt_cli/openai_api_key"
     )
-    openai.api_key = openai_api_key
-    confirm_save_key = Confirm.ask(
-        f"Do you want to save the key to {key_file_path} so you don't have to enter it again next time?",
-        default=True,
-    )
-    if confirm_save_key:
-        os.makedirs(os.path.dirname(key_file_path), exist_ok=True)
-        with open(key_file_path, "w") as f:
-            f.write(openai_api_key)
-elif os.getenv("OPENAI_API_KEY") is None and os.path.exists(key_file_path):
-    with open(key_file_path, "r") as f:
-        openai.api_key = f.read().strip()
-else:
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    if os.getenv("OPENAI_API_KEY") is None and not os.path.exists(key_file_path):
+        openai_api_key = Prompt.ask(
+            "OpenAI API key not found. Press Enter it here to continue", password=True
+        )
+        openai.api_key = openai_api_key
+        confirm_save_key = Confirm.ask(
+            f"Do you want to save the key to {key_file_path} so you don't have to enter it again next time?",
+            default=True,
+        )
+        if confirm_save_key:
+            os.makedirs(os.path.dirname(key_file_path), exist_ok=True)
+            with open(key_file_path, "w") as f:
+                f.write(openai_api_key)
+    elif os.getenv("OPENAI_API_KEY") is None and os.path.exists(key_file_path):
+        with open(key_file_path, "r") as f:
+            openai.api_key = f.read().strip()
+    else:
+        openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 class Role(Enum):
@@ -195,6 +196,7 @@ def chat(
 
 
 def run() -> None:
+    setup_openai_key()
     model = select_model()
     chat_exit_reason, rollover_message = chat(model, has_previous_chat=False)
     while chat_exit_reason == ChatExitReason.START_OVER:
