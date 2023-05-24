@@ -119,6 +119,34 @@ def request_user_input() -> str:
     return user_input
 
 
+def request_ai_response(
+    messages: list[Message], model: str, count_tries: int = 0
+) -> tuple[str, bool]:
+    try:
+        response = openai.ChatCompletion.create(  # type: ignore
+            model=model,
+            temperature=TEMPERATURE,
+            messages=[
+                {"role": message.role.value, "content": message.content}
+                for message in messages
+            ],
+        )
+        assert response.choices[0]["message"]["role"] == Role.ASSISTANT.value
+        return (
+            response.choices[0]["message"]["content"],
+            response.choices[0]["finish_reason"] == "length",
+        )
+    except Exception as e:
+        if count_tries < 3:
+            print(f"{WARNING_PREFIX} {e}")
+            print(f"{WARNING_PREFIX} Retrying...")
+            return request_ai_response(messages, model, count_tries + 1)
+        else:
+            print(f"{WARNING_PREFIX} {e}")
+            print(f"{WARNING_PREFIX} Failed to get response from OpenAI API.")
+            exit(1)
+
+
 def chat(
     model: str, has_previous_chat: bool, rollover_message: Message | None = None
 ) -> tuple[ChatExitReason, Message | None]:
@@ -169,26 +197,14 @@ def chat(
                     role=Role.USER, content=user_input, timestamp=user_input_timestamp
                 )
             )
-
-        response = openai.ChatCompletion.create(  # type: ignore
-            model=model,
-            temperature=TEMPERATURE,
-            messages=[
-                {"role": message.role.value, "content": message.content}
-                for message in messages
-            ],
-        )
-        assert response.choices[0]["message"]["role"] == Role.ASSISTANT.value
-
-        bot_response = response.choices[0]["message"]["content"]
+        bot_response, is_max_token_exceeded = request_ai_response(messages, model)
         print(f"{BOT_DISPLAY_NAME}:", bot_response)
         messages.append(
             Message(
                 role=Role.ASSISTANT, content=bot_response, timestamp=int(time.time())
             )
         )
-
-        if response.choices[0]["finish_reason"] == "length":
+        if is_max_token_exceeded:
             Prompt.ask(
                 f"{WARNING_PREFIX} The total token count exceeds the maximum. You must start a new conversation. Press Enter to continue",
             )
