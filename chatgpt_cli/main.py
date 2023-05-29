@@ -3,6 +3,7 @@ import signal
 import time
 from dataclasses import dataclass
 from enum import Enum
+from typing import Iterable
 
 import openai
 from rich import print
@@ -119,23 +120,37 @@ def request_user_input() -> str:
     return user_input
 
 
+class ResponseFinishReason(Enum):
+    LENGTH = "length"
+    STOP = "stop"
+    CONTENT_FILTER = "content_filter"
+    NULL = None
+
+
 def request_ai_response(
     messages: list[Message], model: str, count_tries: int = 0
-) -> tuple[str, bool]:
+) -> Iterable[tuple[str, ResponseFinishReason]]:
     try:
-        response = openai.ChatCompletion.create(  # type: ignore
+        for chunk in openai.ChatCompletion.create(  # type: ignore
             model=model,
             temperature=TEMPERATURE,
             messages=[
                 {"role": message.role.value, "content": message.content}
                 for message in messages
             ],
-        )
-        assert response.choices[0]["message"]["role"] == Role.ASSISTANT.value
-        return (
-            response.choices[0]["message"]["content"],
-            response.choices[0]["finish_reason"] == "length",
-        )
+            stream=True,
+        ):
+            if chunk.choices[0]["delta"].get("role") is not None:
+                assert chunk.choices[0]["delta"]["role"] == Role.ASSISTANT.value
+
+            if chunk.choices[0]["delta"].get("content") is not None:
+                yield (
+                    chunk.choices[0]["delta"]["content"],
+                    ResponseFinishReason(chunk.choices[0]["finish_reason"]),
+                )
+                continue
+
+            yield ("", ResponseFinishReason(chunk.choices[0]["finish_reason"]))
     except Exception as e:
         if count_tries < 3:
             print(f"{WARNING_PREFIX} {e}")
@@ -197,14 +212,19 @@ def chat(
                     role=Role.USER, content=user_input, timestamp=user_input_timestamp
                 )
             )
-        bot_response, is_max_token_exceeded = request_ai_response(messages, model)
-        print(f"{BOT_DISPLAY_NAME}:", bot_response)
+        print(f"{BOT_DISPLAY_NAME}:", end=" ")
+        bot_response = ""
+        for chunk, finish_reason in request_ai_response(messages, model):
+            print(chunk, end="")
+            bot_response = f"{bot_response}{chunk}"
+        print()
+
         messages.append(
             Message(
                 role=Role.ASSISTANT, content=bot_response, timestamp=int(time.time())
             )
         )
-        if is_max_token_exceeded:
+        if finish_reason == ResponseFinishReason.LENGTH:
             Prompt.ask(
                 f"{WARNING_PREFIX} The total token count exceeds the maximum. You must start a new conversation. Press Enter to continue",
             )
