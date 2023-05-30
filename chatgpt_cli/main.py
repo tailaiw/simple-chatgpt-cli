@@ -1,4 +1,5 @@
 import os
+import readline  # noqa
 import signal
 import time
 from dataclasses import dataclass
